@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvel Characters</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .character-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .character-item {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Marvel Characters</h1>
+    <ul id="characterList" class="character-list">
+    </ul>
+
+    <script>
+        const privateKey = 'e37415f5b05ef78c2cc26550e622f35c3f5b8548';
+        const publicKey = '3d7c6c122667f21f281cc97984d75d21';
+
+        async function fetchMarvelCharacters() {
+            const timeStampInMs = Date.now();
+            const hashInput = timeStampInMs + privateKey + publicKey;
+            const hash = cryptoJS.MD5(hashInput).toString();
+
+            const apiUrl = `https://gateway.marvel.com/v1/public/characters?apikey=${publicKey}&hash=${hash}&ts=${timeStampInMs}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.data.results;
+            } catch (error) {
+                console.error('Error fetching Marvel characters:', error);
+                return null;
+            }
+        }
+
+        function updateUI(characters) {
+            const characterList = document.getElementById('characterList');
+            characterList.innerHTML = '';
+
+            if (!characters) {
+                const errorMessage = document.createElement('li');
+                errorMessage.textContent = 'Failed to fetch Marvel characters.';
+                characterList.appendChild(errorMessage);
+                return;
+            }
+
+            characters.forEach(character => {
+                const characterItem = document.createElement('li');
+                characterItem.classList.add('character-item');
+                characterItem.innerHTML = `
+                    <h2>${character.name}</h2>
+                    <img src="${character.thumbnail.path}.${character.thumbnail.extension}" alt="${character.name}">
+                    <p>${character.description || 'No description available'}</p>
+                `;
+                characterList.appendChild(characterItem);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMarvelCharacters()
+                .then(characters => {
+                    updateUI(characters);
+                })
+                .catch(error => console.error('Error in fetching characters:', error));
+        });
+    </script>
+</body>
+
+</html>
